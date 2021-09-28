@@ -1,0 +1,13 @@
+name = "LForaging"
+uuid = "94595c56-c055-4e36-9e82-f2ece50e3903"
+authors = ["DarioSarra"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
