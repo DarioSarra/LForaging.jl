@@ -1,2 +1,18 @@
+name = "LForaging"
+uuid = "94595c56-c055-4e36-9e82-f2ece50e3903"
+authors = ["DarioSarra"]
+version = "0.1.0"
+
 [deps]
-Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
+Reexport = "189a3867-3050-52da-a836-e630ba90ab69"
+Revise = "295af30f-e4ad-537b-8983-00126c2a3abe"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

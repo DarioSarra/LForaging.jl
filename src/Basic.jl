@@ -1,40 +1,21 @@
-using LForaging
+using Revise, LForaging
 ##
-fig_dir = "/home/beatriz/Documents/Lforaging/Figures"
-pokes = CSV.read("/home/beatriz/Documents/Lforaging/Miscellaneous/Poke_data.csv", DataFrame)
-allowmissing!(pokes)
 
-describe(pokes)
-
-transform!(groupby(pokes,[:MOUSE,:DATE, :TRIAL,:SIDE]),
-    :IN => (x -> collect(1:length(x))) => :POKE_TRIAL,
-    :REWARD => (x -> pushfirst!(Int64.(cumsum(x)[1:end-1].+1),1)) => :BOUT,
-    :IN => (i -> round.(i .- i[1], digits = 1)) => :IN_TRIAL,
-    [:IN, :OUT] => ((i,o) -> round.(o .- i[1], digits =1)) => :OUT_TRIAL,
-)
-
-transform!(groupby(pokes,[:MOUSE,:DATE, :TRIAL,:SIDE, :BOUT]),
-    :IN => (i -> round.(i .- i[1], digits = 1)) => :IN_BOUT,
-    [:IN, :OUT] => ((i,o) -> round.(o .- i[1], digits =1)) => :OUT_BOUT,
-    [:IN, :OUT] => ((i,o) -> round.(o .- i, digits =1)) => :DURATION,
-)
+ispath("/home/beatriz/Documents/") ? (main_path ="/home/beatriz/Documents/") : (main_path = "/Users/dariosarra/Documents/Lab/Walton/LForaging")
+fig_dir = joinpath(main_path,"Figures")
+# pokes = DataFrame(CSV.read(joinpath(main_path,"Miscellaneous/Poke_data.csv")))#, DataFrame)
+# pokes2 = DataFrame(CSV.read(joinpath(main_path,"Miscellaneous/New_Poke_data.csv")))#, DataFrame)
+pokes = DataFrame(CSV.read(joinpath(main_path,"Miscellaneous/States_Poke_data.csv")))#, DataFrame)
+pokes = preprocess_pokes(pokes)[:,[:MOUSE,:DATE,:SIDE,:KIND,:TRAVEL,:BOUT,:TRIAL,:BOUT_TRIAL,:POKE_TRIAL,:REWARD,:LEAVE,
+    :IN, :OUT, :IN_TRIAL, :OUT_TRIAL, :IN_BOUT, :OUT_BOUT, :DURATION,:TIME]];
+##
+pokes[!,:BIN] = Int64.(round.(pokes.DURATION ./ 0.1))
+filter!(r-> r.BIN >= 1, pokes)
+pokes[!,:PatchRewRate] = get_rew_rate(pokes.REWARD,pokes.BIN, 0.1, 2)
+transform!(groupby(pokes,[:MOUSE,:DATE]), [:REWARD,:BIN] => ((R,B) -> get_rew_rate(R,B, 0.1, 2)) => :PatchRewRate)
+open_html_table(pokes[1:2000,:])
 
 
-trav_df = combine(groupby(pokes,[:MOUSE,:DATE, :TRIAL]),
-    :KIND => last => :TRAVEL
-)
-allowmissing!(trav_df)
-transform!(groupby(trav_df,[:MOUSE,:DATE]),
-    :TRAVEL => (x -> (pushfirst!(x[1:end-1], missing))) => :TRAVEL
-)
-pokes = leftjoin(pokes, trav_df, on = [:MOUSE,:DATE,:TRIAL])
-
-transform!(groupby(pokes,[:MOUSE,:DATE, :TRIAL,:SIDE]),
-    :IN => (x-> vcat(falses(length(x)-1), [true])) => :LEAVE
-)
-# pokes[pokes.SIDE .== "travel", :BOUT] .= missing
-
-open_html_table(pokes[1:500,:])
 
 ##
 @df pokes density(:DURATION, group = :KIND, xrotation = 45)
